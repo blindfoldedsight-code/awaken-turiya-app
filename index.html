@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'unsafe-inline' 'self'; style-src 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; media-src 'self';">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#06000f">
+<meta name="color-scheme" content="dark">
+<title>Awaken Turiya — Psychic Intuition Trainer</title>
+<meta name="description" content="Free psychic intuition trainer from Awaken Turiya. Five blindfold-friendly training modes — black or white, suits, dice, colors and a full deck of cards. Every answer is spoken aloud, so you never have to peek.">
+<link rel="canonical" href="https://awakenturiya.com/psychic-trainer">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#06000f;--surface:rgba(255,255,255,.046);--border:rgba(212,175,55,.28);
+  --gold:#d4af37;--gold-lt:#f0d870;--white:#f0e8ff;--muted:#6868a0;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--white);
+  font-family:-apple-system,'SF Pro Display','Helvetica Neue',Arial,sans-serif;
+  -webkit-user-select:none;user-select:none}
+
+/* ── SCREENS ── */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;opacity:0;pointer-events:none;
+  transition:opacity .32s ease;overflow:hidden}
+.screen.active{opacity:1;pointer-events:all}
+
+/* ── STARS ── */
+.stars-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.star{position:absolute;border-radius:50%;background:#fff;opacity:0;
+  animation:twinkle var(--d) var(--dl) ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:0}50%{opacity:var(--op)}}
+
+/* ── HOME ── */
+#home{background:radial-gradient(ellipse 85% 85% at 50% 38%,#180030,#06000f 74%);
+  gap:10px;padding:0 18px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  justify-content:flex-start;
+  padding-top:max(44px,env(safe-area-inset-top,44px));
+  padding-bottom:max(24px,env(safe-area-inset-bottom,24px));align-items:center}
+.home-header{display:flex;flex-direction:column;align-items:center;gap:5px;margin-bottom:5px}
+.eye-wrap svg{width:56px;height:44px;animation:eye-glow 3s ease-in-out infinite}
+@keyframes eye-glow{
+  0%,100%{filter:drop-shadow(0 0 5px rgba(212,175,55,.35))}
+  50%{filter:drop-shadow(0 0 18px rgba(212,175,55,.9))}}
+h1.app-title{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:700;letter-spacing:.04em;
+  text-align:center;line-height:1.1;
+  background:linear-gradient(135deg,#9a7218,var(--gold),var(--gold-lt),var(--gold),#9a7218);
+  background-size:220% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:shimmer 4s linear infinite}
+@keyframes shimmer{to{background-position:220% center}}
+.subtitle{font-size:clamp(.7rem,3vw,.85rem);color:var(--muted);letter-spacing:.18em;
+  text-transform:uppercase;text-align:center}
+
+/* ── SESSION CARDS ── */
+.session-card{width:min(340px,94vw);background:var(--surface);
+  border:1px solid var(--border);border-radius:16px;
+  padding:14px 16px;display:flex;align-items:center;gap:13px;
+  cursor:pointer;transition:background .15s,transform .1s;flex-shrink:0}
+.session-card:active{background:rgba(212,175,55,.08);transform:scale(.985)}
+.session-card .icon{font-size:1.6rem;width:32px;text-align:center;flex-shrink:0}
+.session-card .text-col{flex:1}
+.session-card .s-title{font-size:.95rem;font-weight:600;color:var(--white)}
+.session-card .s-sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+.odds-badge{display:flex;flex-direction:column;align-items:center;
+  background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.2);
+  border-radius:8px;padding:5px 9px;flex-shrink:0}
+.odds-num{font-size:.8rem;font-weight:700;color:var(--gold);line-height:1.1}
+.odds-lbl{font-size:.52rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.home-actions{display:flex;gap:10px;margin-top:4px}
+.action-btn{padding:9px 20px;background:var(--surface);border:1px solid var(--border);
+  border-radius:30px;font-size:.8rem;color:var(--muted);cursor:pointer;transition:opacity .14s;
+  text-decoration:none;display:inline-block;white-space:nowrap}
+.action-btn:hover{color:var(--gold);border-color:rgba(212,175,55,.5)}
+.action-btn:active{opacity:.6}
+
+/* ── SCORING TOGGLE ── */
+.scoring-row{width:min(340px,94vw);background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px;
+  cursor:pointer;flex-shrink:0;transition:background .15s;}
+.scoring-row:active{background:rgba(212,175,55,.08);}
+.scoring-icon{font-size:1.6rem;width:32px;text-align:center;flex-shrink:0;}
+.scoring-text{flex:1;}
+.scoring-title{font-size:.95rem;font-weight:600;color:var(--white);}
+.scoring-sub{font-size:.72rem;color:var(--muted);margin-top:2px;}
+.toggle-track{width:46px;height:27px;border-radius:14px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);
+  position:relative;transition:background .25s,border-color .25s;flex-shrink:0;}
+.toggle-track.on{background:var(--gold);border-color:var(--gold);}
+.toggle-knob{position:absolute;width:21px;height:21px;border-radius:50%;
+  background:#fff;top:2px;left:2px;
+  transition:transform .22s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.toggle-track.on .toggle-knob{transform:translateX(19px);}
+
+/* ── TRAINING SCREENS ── */
+.train-screen{transition:background-color .2s ease;cursor:pointer}
+
+/* Top bar */
+.train-topbar{
+  position:absolute;top:0;left:0;right:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:max(14px,env(safe-area-inset-top,14px)) 18px 14px;
+  background:rgba(0,0,0,.32);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  gap:10px;
+}
+.train-back{
+  background:transparent;border:1px solid rgba(255,255,255,.25);
+  color:rgba(255,255,255,.85);font-size:.78rem;
+  padding:5px 12px;border-radius:20px;cursor:pointer;
+  font-family:inherit;letter-spacing:.02em;flex-shrink:0;
+}
+.train-back:active{opacity:.6}
+.train-score{
+  color:var(--gold);font-size:.88rem;font-weight:700;
+  letter-spacing:.04em;flex:1;text-align:center;
+}
+.train-round{
+  color:rgba(255,255,255,.65);font-size:.78rem;
+  font-weight:600;letter-spacing:.06em;flex-shrink:0;
+}
+
+/* Hint bar at bottom — changes based on phase */
+.train-hint{
+  position:absolute;
+  bottom:max(28px,env(safe-area-inset-bottom,28px));
+  left:0;right:0;text-align:center;pointer-events:none;
+}
+.hint-inner{
+  display:inline-flex;align-items:center;gap:18px;
+  font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;
+  color:rgba(255,255,255,.38);
+}
+.hint-inner.dark-text{color:rgba(0,0,0,.28);}
+.hint-arrow{font-size:1rem;}
+
+/* Score phase — left/right zone overlay glow */
+.train-screen.score-phase::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(to right,
+    rgba(239,68,68,.07) 0%,rgba(239,68,68,.07) 48%,
+    transparent 50%,
+    rgba(34,197,94,.07) 52%,rgba(34,197,94,.07) 100%);
+  transition:opacity .2s;
+}
+
+/* Flash on tap */
+@keyframes tap-flash{0%{opacity:1}40%{opacity:.6}100%{opacity:1}}
+.train-screen.flashing{animation:tap-flash .18s ease}
+
+/* ── BW / COLOR train backgrounds ── */
+#bw-train{background:#080808;}
+#color-train{background:#E53E3E;}
+
+/* ── DARK TRAIN SCREENS ── */
+#suit-train,#dice-train,#card-train{
+  background:radial-gradient(ellipse 90% 80% at 50% 42%,#180030,#06000f 80%);}
+
+/* Suit display */
+.suit-display{display:flex;flex-direction:column;align-items:center;gap:12px;pointer-events:none;z-index:2;}
+.suit-sym-huge{font-size:clamp(180px,52vw,300px);line-height:1;filter:drop-shadow(0 0 30px currentColor);}
+.suit-name-big{font-size:clamp(1.8rem,7vw,2.6rem);font-weight:300;letter-spacing:.2em;
+  text-transform:uppercase;color:rgba(255,255,255,.7);}
+
+/* Dice display */
+.dice-display{display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:none;z-index:2;}
+.dice-sym-huge{font-size:clamp(300px,80vw,520px);line-height:1;}
+.dice-num-label{font-size:clamp(2rem,7vw,3rem);font-weight:300;letter-spacing:.25em;
+  text-transform:uppercase;color:rgba(255,255,255,.5);}
+
+/* Card display */
+.card-display{pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:18px;z-index:2;}
+.card-face{
+  background:#fff;border-radius:24px;
+  padding:36px 48px;
+  box-shadow:0 16px 64px rgba(0,0,0,.7);
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  min-width:200px;
+}
+.card-face.red{color:#c01010;}
+.card-face.black{color:#111;}
+.card-val-big{font-size:clamp(4rem,17vw,7rem);font-weight:800;line-height:1;}
+.card-sym-big{font-size:clamp(5.5rem,24vw,10rem);line-height:1;}
+.card-suit-label{font-size:clamp(.7rem,3vw,1rem);font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:rgba(255,255,255,.6);}
+
+/* ── COMPLETE SCREEN ── */
+.complete-screen{
+  background:radial-gradient(ellipse 85% 85% at 50% 38%,#160028,#06000f 74%);
+  gap:16px;
+}
+.complete-label{font-size:clamp(.9rem,3.5vw,1.1rem);letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted);}
+.complete-score{
+  font-size:clamp(3rem,14vw,5.5rem);font-weight:800;line-height:1;
+  background:linear-gradient(135deg,#9a7218,var(--gold),var(--gold-lt),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.complete-denom{font-size:clamp(.9rem,3.5vw,1.1rem);color:var(--muted);margin-top:-8px;}
+.complete-msg{font-size:clamp(.82rem,3.2vw,.95rem);color:var(--muted);
+  text-align:center;max-width:260px;line-height:1.6;}
+.btn-primary{padding:13px 36px;background:linear-gradient(135deg,#9a6e10,var(--gold));
+  border:none;border-radius:30px;color:#06000f;font-size:1rem;font-weight:700;
+  letter-spacing:.04em;cursor:pointer;transition:opacity .14s;font-family:inherit;}
+.btn-primary:active{opacity:.75}
+.btn-ghost{padding:11px 30px;background:transparent;border:1px solid var(--border);
+  border-radius:30px;color:var(--muted);font-size:.88rem;
+  cursor:pointer;transition:opacity .14s;font-family:inherit;}
+.btn-ghost:active{opacity:.6}
+
+/* ── WEB EXTRAS ── */
+.topbtns{position:fixed;top:max(10px,env(safe-area-inset-top,10px));right:12px;z-index:20;
+  display:flex;gap:8px}
+.topbtn{width:36px;height:36px;border-radius:50%;background:var(--surface);
+  border:1px solid var(--border);color:var(--gold);font-size:.95rem;line-height:1;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:opacity .14s,background .15s;font-family:inherit;padding:0}
+.topbtn:hover{background:rgba(212,175,55,.12)}
+.topbtn:active{opacity:.6}
+.topbtn[hidden]{display:none!important}
+body.in-session .topbtns{display:none}
+.session-card,.scoring-row,.action-btn,.btn-primary,.btn-ghost,.train-back{cursor:pointer}
+.session-card:hover,.scoring-row:hover{background:rgba(212,175,55,.07)}
+.keys-hint{font-size:.66rem;color:var(--muted);letter-spacing:.08em;text-align:center;
+  margin-top:2px;opacity:.85}
+.keys-hint kbd{font-family:inherit;border:1px solid var(--border);border-radius:5px;
+  padding:1px 6px;color:var(--gold);font-size:.62rem}
+@media (pointer:coarse){.keys-hint{display:none}}
+.site-foot{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center;
+  margin-top:6px;padding-bottom:4px;flex-shrink:0}
+.site-foot a{color:var(--muted);font-size:.7rem;letter-spacing:.06em;text-decoration:none;
+  border-bottom:1px solid rgba(212,175,55,.2);padding-bottom:1px}
+.site-foot a:hover{color:var(--gold)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ HOME ════════════════════════════════ -->
+<div id="home" class="screen active">
+  <div class="stars-layer" id="home-stars"></div>
+  <div class="home-header">
+    <div class="eye-wrap">
+      <svg viewBox="0 0 90 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="45" cy="35" rx="43" ry="28" stroke="#d4af37" stroke-width="1.8" fill="none"/>
+        <circle cx="45" cy="35" r="16" stroke="#d4af37" stroke-width="1.8" fill="rgba(80,0,140,.35)"/>
+        <circle cx="45" cy="35" r="8.5" fill="#d4af37" opacity=".85"/>
+        <circle cx="50" cy="30" r="2.5" fill="rgba(255,255,255,.65)"/>
+        <line x1="45" y1="7" x2="45" y2="2" stroke="#d4af37" stroke-width="1.5"/>
+        <line x1="45" y1="68" x2="45" y2="63" stroke="#d4af37" stroke-width="1.5"/>
+        <line x1="12" y1="20" x2="8" y2="17" stroke="#d4af37" stroke-width="1.2"/>
+        <line x1="78" y1="20" x2="82" y2="17" stroke="#d4af37" stroke-width="1.2"/>
+      </svg>
+    </div>
+    <h1 class="app-title">Awaken<br>Turiya</h1>
+    <div class="subtitle">Train Your Psychic Intuition</div>
+  </div>
+
+  <div class="session-card" onclick="startSession('bw')">
+    <div class="icon">⬛</div>
+    <div class="text-col"><div class="s-title">Black or White</div><div class="s-sub">Sense the color on screen</div></div>
+    <div class="odds-badge"><div class="odds-num">1:2</div><div class="odds-lbl">Odds</div></div>
+  </div>
+  <div class="session-card" onclick="startSession('suit')">
+    <div class="icon">♠</div>
+    <div class="text-col"><div class="s-title">Suits Only</div><div class="s-sub">Name the suit of the card</div></div>
+    <div class="odds-badge"><div class="odds-num">1:4</div><div class="odds-lbl">Odds</div></div>
+  </div>
+  <div class="session-card" onclick="startSession('dice')">
+    <div class="icon">🎲</div>
+    <div class="text-col"><div class="s-title">Dice</div><div class="s-sub">Sense the number rolled</div></div>
+    <div class="odds-badge"><div class="odds-num">1:6</div><div class="odds-lbl">Odds</div></div>
+  </div>
+  <div class="session-card" onclick="startSession('color')">
+    <div class="icon">🌈</div>
+    <div class="text-col"><div class="s-title">Colors</div><div class="s-sub">Sense the color on screen</div></div>
+    <div class="odds-badge"><div class="odds-num">1:7</div><div class="odds-lbl">Odds</div></div>
+  </div>
+  <div class="session-card" onclick="startSession('card')">
+    <div class="icon">🃏</div>
+    <div class="text-col"><div class="s-title">Deck of Cards</div><div class="s-sub">Name the card you sense</div></div>
+    <div class="odds-badge"><div class="odds-num">1:52</div><div class="odds-lbl">Odds</div></div>
+  </div>
+
+  <div class="scoring-row" onclick="toggleScoring()">
+    <div class="scoring-icon">🎯</div>
+    <div class="scoring-text">
+      <div class="scoring-title">Score Tracking</div>
+      <div class="scoring-sub" id="scoring-sub">Off — tap anywhere to reveal</div>
+    </div>
+    <div class="toggle-track" id="scoring-track">
+      <div class="toggle-knob"></div>
+    </div>
+  </div>
+
+  <div class="keys-hint">
+    Desktop: <kbd>Space</kbd> reveal &nbsp;·&nbsp; <kbd>&larr;</kbd> wrong &nbsp;·&nbsp; <kbd>&rarr;</kbd> right
+  </div>
+
+  <div class="home-actions">
+    <a class="action-btn" href="https://payhip.com/b/wle1k" target="_blank" rel="noopener">📖 The Book</a>
+    <a class="action-btn" href="https://awakenturiya.com" target="_blank" rel="noopener">✨ Awaken Turiya</a>
+  </div>
+
+  <div class="site-foot">
+    <a href="https://awakenturiya.com/blog" target="_blank" rel="noopener">Blog</a>
+    <a href="https://awakenturiya.com/downloads" target="_blank" rel="noopener">Downloads</a>
+    <a href="https://awakenturiya.com/audiobooks" target="_blank" rel="noopener">Audiobooks</a>
+  </div>
+</div>
+
+<div class="topbtns">
+  <button class="topbtn" id="btn-install" title="Install this app" aria-label="Install this app" hidden><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M4 20h16"/></svg></button>
+  <button class="topbtn" id="btn-full" title="Fullscreen" aria-label="Fullscreen"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M16 21h3a2 2 0 0 0 2-2v-3M8 21H5a2 2 0 0 1-2-2v-3"/></svg></button>
+</div>
+
+<!-- ═══════════════════ BLACK / WHITE ═══════════════════════════════ -->
+<div id="bw-train" class="screen train-screen">
+  <div class="train-topbar">
+    <button class="train-back" id="bw-back">← Home</button>
+    <div class="train-score" id="bw-score">0 / 20</div>
+    <div class="train-round" id="bw-round">1 / 20</div>
+  </div>
+  <div class="train-hint" id="bw-hint">
+    <div class="hint-inner" id="bw-hint-inner">Tap anywhere to reveal</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SUITS ONLY ══════════════════════════════════ -->
+<div id="suit-train" class="screen train-screen">
+  <div class="train-topbar">
+    <button class="train-back" id="suit-back">← Home</button>
+    <div class="train-score" id="suit-score">0 / 20</div>
+    <div class="train-round" id="suit-round">1 / 20</div>
+  </div>
+  <div class="suit-display">
+    <div class="suit-sym-huge" id="suit-sym">♠</div>
+    <div class="suit-name-big" id="suit-name">Spades</div>
+  </div>
+  <div class="train-hint">
+    <div class="hint-inner" id="suit-hint-inner">Tap anywhere to reveal</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ DICE ═════════════════════════════════════════ -->
+<div id="dice-train" class="screen train-screen">
+  <div class="train-topbar">
+    <button class="train-back" id="dice-back">← Home</button>
+    <div class="train-score" id="dice-score">0 / 20</div>
+    <div class="train-round" id="dice-round">1 / 20</div>
+  </div>
+  <div class="dice-display">
+    <div class="dice-sym-huge" id="dice-face">⚀</div>
+    <div class="dice-num-label" id="dice-label">One</div>
+  </div>
+  <div class="train-hint">
+    <div class="hint-inner" id="dice-hint-inner">Tap anywhere to reveal</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ COLORS ═══════════════════════════════════════ -->
+<div id="color-train" class="screen train-screen">
+  <div class="train-topbar">
+    <button class="train-back" id="color-back">← Home</button>
+    <div class="train-score" id="color-score">0 / 20</div>
+    <div class="train-round" id="color-round">1 / 20</div>
+  </div>
+  <div class="train-hint" id="color-hint">
+    <div class="hint-inner" id="color-hint-inner">Tap anywhere to reveal</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ DECK OF CARDS ═══════════════════════════════ -->
+<div id="card-train" class="screen train-screen">
+  <div class="train-topbar">
+    <button class="train-back" id="card-back">← Home</button>
+    <div class="train-score" id="card-score">0 / 20</div>
+    <div class="train-round" id="card-round">1 / 20</div>
+  </div>
+  <div class="card-display">
+    <div class="card-face" id="card-face">
+      <div class="card-val-big" id="card-val">A</div>
+      <div class="card-sym-big" id="card-sym">♠</div>
+    </div>
+    <div class="card-suit-label" id="card-suit-lbl">Spades</div>
+  </div>
+  <div class="train-hint">
+    <div class="hint-inner" id="card-hint-inner">Tap anywhere to reveal</div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SESSION COMPLETE ════════════════════════════ -->
+<div id="complete" class="screen complete-screen">
+  <div class="stars-layer" id="complete-stars"></div>
+  <div class="complete-label">Session Complete</div>
+  <div class="complete-score" id="complete-score">12</div>
+  <div class="complete-denom" id="complete-denom">out of 20</div>
+  <div class="complete-msg" id="complete-msg">Well done. Trust what you sensed.</div>
+  <button class="btn-primary" id="complete-again">Try Again</button>
+  <button class="btn-ghost" onclick="showScreen('home')">Home</button>
+</div>
+
+<!-- ════════════════════════ SCRIPT ══════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ── DATA ─────────────────────────────────────────────────────────── */
+const COLORS=Object.freeze([
+  {name:'Red',    hex:'#E53E3E',light:false},
+  {name:'Orange', hex:'#ED8936',light:false},
+  {name:'Yellow', hex:'#ECC94B',light:true},
+  {name:'Green',  hex:'#3CB371',light:false},
+  {name:'Blue',   hex:'#3B82F6',light:false},
+  {name:'Purple', hex:'#9333EA',light:false},
+  {name:'White',  hex:'#F1F5F9',light:true},
+]);
+const DICE_SYMS =Object.freeze(['','⚀','⚁','⚂','⚃','⚄','⚅']);
+const DICE_NAMES=Object.freeze(['','One','Two','Three','Four','Five','Six']);
+const SUITS     =Object.freeze(['Hearts','Diamonds','Clubs','Spades']);
+const SUIT_SYM  =Object.freeze({Hearts:'♥',Diamonds:'♦',Clubs:'♣',Spades:'♠'});
+const SUIT_CLR  =Object.freeze({Hearts:'#d00020',Diamonds:'#d00020',Clubs:'#e8e0ff',Spades:'#e8e0ff'});
+const IS_RED    =Object.freeze({Hearts:true,Diamonds:true,Clubs:false,Spades:false});
+const VALUES    =Object.freeze(['2','3','4','5','6','7','8','9','10','Jack','Queen','King','Ace']);
+
+/* ── SCORING PREFERENCE ───────────────────────────────────────────── */
+const SCORING_KEY='awaken_turiya_scoring';
+let scoringOn=localStorage.getItem(SCORING_KEY)==='true';
+
+function toggleScoring(){
+  scoringOn=!scoringOn;
+  try{localStorage.setItem(SCORING_KEY,scoringOn);}catch(_){}
+  updateToggleUI();
+}
+function updateToggleUI(){
+  const track=document.getElementById('scoring-track');
+  const sub=document.getElementById('scoring-sub');
+  if(track) track.classList.toggle('on',scoringOn);
+  if(sub) sub.textContent=scoringOn
+    ?'On — left = wrong, right = correct'
+    :'Off — tap anywhere to reveal';
+}
+
+/* ── STATE ────────────────────────────────────────────────────────── */
+const S={
+  mode:null, item:null,
+  qNum:0, score:0, deck:[],
+  lastMode:null,
+  phase:'reveal',   // 'reveal' | 'score'
+  speaking:false, locked:false,
+};
+
+/* ── UTILS ────────────────────────────────────────────────────────── */
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function randInt(lo,hi){return Math.floor(Math.random()*(hi-lo+1))+lo;}
+function buildDeck(){
+  const d=[];
+  for(const s of SUITS) for(const v of VALUES) d.push({value:v,suit:s});
+  return d;
+}
+
+/* ── ROUTING ──────────────────────────────────────────────────────── */
+function showScreen(id){
+  if(SPEECH_OK) try{window.speechSynthesis.cancel();}catch(_){}
+  S.speaking=false; S.locked=false; S.phase='reveal';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const t=document.getElementById(id); if(t) t.classList.add('active');
+  // The floating web controls would sit on top of the training topbar, and a
+  // training screen is tap-anywhere, so keep them to the home screen only.
+  document.body.classList.toggle('in-session', id!=='home');
+}
+
+/* ── SPEECH ───────────────────────────────────────────────────────── */
+const SPEECH_OK = ('speechSynthesis' in window) &&
+                  (typeof window.SpeechSynthesisUtterance === 'function');
+
+function speak(text,cb){
+  if(typeof text!=='string') return;
+  let done=false;
+  const finish=()=>{ if(done) return; done=true; if(typeof cb==='function') cb(); };
+
+  if(!SPEECH_OK){ setTimeout(finish,350); return; }
+
+  try{ window.speechSynthesis.cancel(); }catch(_){}
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=0.88; u.pitch=1.0; u.volume=1.0;
+  u.onend=finish; u.onerror=finish;
+
+  /* Safety net. Browsers drop 'end' more often than phones do: Safari with a
+     muted tab, a machine with no installed voices, a backgrounded tab. Without
+     this the session would sit forever with S.speaking true and never advance. */
+  setTimeout(finish, Math.min(9000, 1400 + text.length*90));
+
+  try{ window.speechSynthesis.speak(u); }catch(_){ finish(); }
+}
+
+/* ── STARS ────────────────────────────────────────────────────────── */
+function makeStars(id,n){
+  const el=document.getElementById(id); if(!el) return;
+  const f=document.createDocumentFragment();
+  for(let i=0;i<n;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=1+Math.random()*2;
+    s.style.cssText=`width:${sz}px;height:${sz}px;`+
+      `left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;`+
+      `--d:${(2+Math.random()*5).toFixed(2)}s;--dl:${(Math.random()*5).toFixed(2)}s;`+
+      `--op:${(0.25+Math.random()*0.7).toFixed(2)}`;
+    f.appendChild(s);
+  }
+  el.appendChild(f);
+}
+makeStars('home-stars',90);
+makeStars('complete-stars',60);
+updateToggleUI(); // reflect saved preference on load
+
+/* Speech warm-up: browsers need a user gesture before the first utterance */
+(function(){
+  let warmed=false;
+  function warm(){
+    if(warmed) return; warmed=true;
+    if(!SPEECH_OK) return;
+    try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;window.speechSynthesis.speak(u);}catch(_){}
+  }
+  ['touchstart','pointerdown','keydown'].forEach(ev=>
+    document.addEventListener(ev,warm,{once:true,passive:true}));
+})();
+
+/* ── HINT TEXT ────────────────────────────────────────────────────── */
+const HINT_IDS={bw:'bw-hint-inner',suit:'suit-hint-inner',dice:'dice-hint-inner',
+                color:'color-hint-inner',card:'card-hint-inner'};
+
+function setHint(mode, phase, lightBg){
+  const el=document.getElementById(HINT_IDS[mode]); if(!el) return;
+  el.classList.toggle('dark-text', !!lightBg);
+  if(phase==='reveal'){
+    el.innerHTML='Tap anywhere to reveal';
+  } else {
+    el.innerHTML='<span class="hint-arrow">←</span> Wrong &nbsp;&nbsp; Right <span class="hint-arrow">→</span>';
+  }
+}
+
+/* ── PICK NEXT ITEM ───────────────────────────────────────────────── */
+function pickNext(mode){
+  switch(mode){
+    case 'bw':
+      S.item=['Black','White'][randInt(0,1)]; return;
+    case 'suit':{
+      const pool=SUITS.filter(s=>s!==S.item);
+      S.item=pool[Math.floor(Math.random()*pool.length)]; return;
+    }
+    case 'dice':{
+      let n; do{n=randInt(1,6);}while(n===S.item); S.item=n; return;
+    }
+    case 'color':{
+      const cp=COLORS.filter(c=>c!==S.item);
+      S.item=cp[Math.floor(Math.random()*cp.length)]; return;
+    }
+    case 'card':
+      if(S.qNum>S.deck.length) S.deck=shuffle(buildDeck());
+      S.item=S.deck[(S.qNum-1)%S.deck.length]; return;
+  }
+}
+
+/* ── UPDATE DISPLAY ───────────────────────────────────────────────── */
+function isLightBg(mode){
+  if(mode==='bw') return S.item==='White';
+  if(mode==='color') return S.item && S.item.light;
+  return false;
+}
+
+function updateDisplay(mode){
+  const item=S.item;
+  switch(mode){
+    case 'bw':{
+      const light=item==='White';
+      document.getElementById('bw-train').style.backgroundColor=light?'#f0f0f0':'#080808';
+      break;
+    }
+    case 'suit':{
+      document.getElementById('suit-sym').textContent=SUIT_SYM[item];
+      document.getElementById('suit-sym').style.color=SUIT_CLR[item];
+      document.getElementById('suit-name').textContent=item;
+      document.getElementById('suit-name').style.color=SUIT_CLR[item];
+      break;
+    }
+    case 'dice':{
+      document.getElementById('dice-face').textContent=DICE_SYMS[item];
+      document.getElementById('dice-label').textContent=DICE_NAMES[item];
+      break;
+    }
+    case 'color':{
+      document.getElementById('color-train').style.backgroundColor=item.hex;
+      break;
+    }
+    case 'card':{
+      const face=document.getElementById('card-face');
+      face.className='card-face '+(IS_RED[item.suit]?'red':'black');
+      document.getElementById('card-val').textContent=item.value;
+      document.getElementById('card-sym').textContent=SUIT_SYM[item.suit];
+      document.getElementById('card-suit-lbl').textContent=item.suit;
+      break;
+    }
+  }
+  // Topbar score & round
+  const scoreEl=document.getElementById(mode+'-score');
+  const roundEl=document.getElementById(mode+'-round');
+  if(scoreEl){ scoreEl.textContent=scoringOn?(S.score+' / 20'):''; scoreEl.style.display=scoringOn?'':'none'; }
+  if(roundEl) roundEl.textContent=S.qNum+' / 20';
+  // Hint
+  setHint(mode, S.phase, isLightBg(mode));
+  // Score-phase CSS class
+  const screen=document.getElementById(mode+'-train');
+  screen.classList.toggle('score-phase', S.phase==='score');
+}
+
+/* ── GET LABEL ────────────────────────────────────────────────────── */
+function getLabel(mode){
+  switch(mode){
+    case 'bw':    return S.item;
+    case 'suit':  return S.item;
+    case 'dice':  return DICE_NAMES[S.item];
+    case 'color': return S.item.name;
+    case 'card':  return S.item.value+' of '+S.item.suit;
+  }
+  return '';
+}
+
+/* ── SESSION START ────────────────────────────────────────────────── */
+function startSession(mode){
+  S.mode=mode; S.lastMode=mode;
+  S.qNum=1; S.score=0;
+  S.phase='reveal'; S.speaking=false; S.locked=false;
+  if(mode==='card') S.deck=shuffle(buildDeck());
+  S.item=null; pickNext(mode);
+  showScreen(mode+'-train');
+  updateDisplay(mode);
+}
+
+/* ── FLASH ────────────────────────────────────────────────────────── */
+function flash(mode){
+  const el=document.getElementById(mode+'-train');
+  el.classList.remove('flashing');
+  void el.offsetWidth;
+  el.classList.add('flashing');
+  setTimeout(()=>el.classList.remove('flashing'),180);
+}
+
+/* ── REVEAL (first tap) ───────────────────────────────────────────── */
+function doReveal(mode){
+  if(S.speaking||S.locked||S.mode!==mode||S.phase!=='reveal') return;
+  flash(mode);
+  const label=getLabel(mode);
+
+  if(scoringOn){
+    // Scoring mode: speak answer, wait for left/right tap
+    S.phase='score';
+    S.speaking=true;
+    updateDisplay(mode);
+    speak(label,()=>{ S.speaking=false; });
+  } else {
+    // Simple mode: speak answer and immediately advance
+    const wasLast=(S.qNum>=20);
+    if(wasLast){
+      S.locked=true;
+      speak(label,()=>{ S.speaking=false; sessionComplete(mode); });
+      return;
+    }
+    S.qNum++;
+    pickNext(mode);
+    updateDisplay(mode);
+    S.speaking=true;
+    speak(label,()=>{ S.speaking=false; });
+  }
+}
+
+/* ── SCORE (second tap — left=wrong, right=correct) ──────────────── */
+function doScore(mode, correct){
+  if(S.locked||S.mode!==mode||S.phase!=='score') return;
+  flash(mode);
+  if(correct) S.score++;
+  const wasLast=(S.qNum>=20);
+  if(wasLast){
+    S.locked=true;
+    sessionComplete(mode);
+    return;
+  }
+  S.qNum++;
+  pickNext(mode);
+  S.phase='reveal';
+  updateDisplay(mode);
+}
+
+/* ── MAIN TAP HANDLER ─────────────────────────────────────────────── */
+function handleTap(mode, clientX, screenW){
+  if(S.mode!==mode) return;
+  if(S.phase==='reveal'){
+    doReveal(mode);
+  } else {
+    // Left half = wrong, right half = correct
+    const correct=(clientX!==undefined) ? clientX>(screenW/2) : null;
+    if(correct===null) return; // keyboard sends explicit true/false
+    doScore(mode, correct);
+  }
+}
+
+/* ── SESSION COMPLETE ─────────────────────────────────────────────── */
+function resultMsg(score){
+  if(score===20) return 'Perfect. Your intuition is extraordinary!';
+  if(score>=17)  return 'Exceptional. Your psychic senses are awakening!';
+  if(score>=13)  return 'Great work. Your intuition is growing stronger.';
+  if(score>=9)   return 'Good effort. Keep training — awareness is building.';
+  if(score>=5)   return 'Keep practicing. Every session opens you further.';
+  return 'Trust your inner knowing. The path begins here.';
+}
+function sessionComplete(mode){
+  const scoreEl=document.getElementById('complete-score');
+  const denomEl=document.getElementById('complete-denom');
+  if(!scoreEl||!denomEl){ showScreen('home'); return; }
+  const msg=scoringOn?resultMsg(S.score):'Well done. Keep trusting your senses.';
+  if(scoringOn){
+    scoreEl.textContent=S.score; scoreEl.style.display='';
+    denomEl.style.display='';
+  } else {
+    scoreEl.style.display='none';
+    denomEl.style.display='none';
+  }
+  document.getElementById('complete-msg').textContent=msg;
+  document.getElementById('complete-again').onclick=()=>startSession(S.lastMode);
+  showScreen('complete');
+  const announcement=scoringOn
+    ?'Session complete. You scored '+S.score+' out of 20. '+msg
+    :'Session complete. '+msg;
+  speak(announcement);
+}
+
+/* ── WIRE UP ALL TRAINING SCREENS ────────────────────────────────── */
+(function(){
+  const modes=['bw','suit','dice','color','card'];
+
+  for(const mode of modes){
+    const screen=document.getElementById(mode+'-train');
+    const backBtn=document.getElementById(mode+'-back');
+
+    backBtn.addEventListener('pointerdown',e=>e.stopPropagation());
+    backBtn.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(SPEECH_OK) try{window.speechSynthesis.cancel();}catch(_){}
+      S.speaking=false; S.locked=false; S.mode=null;
+      showScreen('home');
+    });
+
+    screen.addEventListener('pointerdown',e=>{
+      if(e.target===backBtn||backBtn.contains(e.target)) return;
+      e.preventDefault();
+      handleTap(mode, e.clientX, screen.offsetWidth);
+    },{passive:false});
+  }
+
+  /* Keyboard: Space = reveal, ← = wrong, → = correct */
+  document.addEventListener('keydown',e=>{
+    if(!S.mode) return;
+    if(e.code==='Space'&&!e.repeat){
+      e.preventDefault();
+      doReveal(S.mode);
+    } else if(e.code==='ArrowLeft'&&!e.repeat){
+      e.preventDefault();
+      doScore(S.mode, false);
+    } else if(e.code==='ArrowRight'&&!e.repeat){
+      e.preventDefault();
+      doScore(S.mode, true);
+    }
+  });
+})();
+
+/* ── WEB: fullscreen, install prompt, service worker ─────────────── */
+(function(){
+  const root=document.documentElement;
+  const fullBtn=document.getElementById('btn-full');
+  function fsElement(){return document.fullscreenElement||document.webkitFullscreenElement||null;}
+  const ICON_FULL='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M16 21h3a2 2 0 0 0 2-2v-3M8 21H5a2 2 0 0 1-2-2v-3"/></svg>';
+  const ICON_EXIT='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3M16 3v3a2 2 0 0 0 2 2h3M16 21v-3a2 2 0 0 1 2-2h3M8 21v-3a2 2 0 0 0-2-2H3"/></svg>';
+  function syncFullBtn(){
+    const on=!!fsElement();
+    fullBtn.innerHTML=on?ICON_EXIT:ICON_FULL;
+    fullBtn.title=fullBtn.ariaLabel=on?'Exit fullscreen':'Fullscreen';
+  }
+  fullBtn.addEventListener('click',()=>{
+    if(fsElement()){
+      (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+    } else {
+      const req=root.requestFullscreen||root.webkitRequestFullscreen;
+      if(req) req.call(root).catch(()=>{});
+    }
+  });
+  document.addEventListener('fullscreenchange',syncFullBtn);
+  document.addEventListener('webkitfullscreenchange',syncFullBtn);
+  if(!(root.requestFullscreen||root.webkitRequestFullscreen)) fullBtn.hidden=true;
+
+  /* Add-to-home-screen (Chrome / Edge / Android) */
+  const installBtn=document.getElementById('btn-install');
+  let deferred=null;
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault(); deferred=e; installBtn.hidden=false;
+  });
+  installBtn.addEventListener('click',async()=>{
+    if(!deferred) return;
+    installBtn.hidden=true;
+    deferred.prompt();
+    try{await deferred.userChoice;}catch(_){}
+    deferred=null;
+  });
+  window.addEventListener('appinstalled',()=>{installBtn.hidden=true;deferred=null;});
+
+  /* Offline support */
+  if('serviceWorker' in navigator && window.isSecureContext){
+    window.addEventListener('load',()=>{
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+
+  /* Keep the tab title honest and stop speech when the tab is hidden */
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){ if(SPEECH_OK) try{window.speechSynthesis.cancel();}catch(_){} S.speaking=false; }
+  });
+})();
+</script>
+</body>
+</html>
