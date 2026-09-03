@@ -431,7 +431,15 @@ const VALUES    =Object.freeze(['2','3','4','5','6','7','8','9','10','Jack','Que
 
 /* ── SCORING PREFERENCE ───────────────────────────────────────────── */
 const SCORING_KEY='awaken_turiya_scoring';
-let scoringOn=localStorage.getItem(SCORING_KEY)==='true';
+
+/* Reading localStorage THROWS, rather than returning null, when storage is
+   blocked -- Safari's third-party rules when this page is embedded in an
+   iframe on awakenturiya.com, or a browser set to block site data. An
+   unguarded read here would abort the whole script and leave a dead page. */
+function loadScoring(){
+  try{ return localStorage.getItem(SCORING_KEY)==='true'; }catch(_){ return false; }
+}
+let scoringOn=loadScoring();
 
 function toggleScoring(){
   scoringOn=!scoringOn;
