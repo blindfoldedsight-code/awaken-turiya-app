@@ -234,6 +234,8 @@ body.in-session .topbtns{display:none}
 .keys-hint kbd{font-family:inherit;border:1px solid var(--border);border-radius:5px;
   padding:1px 6px;color:var(--gold);font-size:.62rem}
 @media (pointer:coarse){.keys-hint{display:none}}
+.sound-note{font-size:.66rem;color:var(--muted);letter-spacing:.04em;text-align:center;
+  max-width:300px;line-height:1.5;margin-top:6px;opacity:.85}
 .site-foot{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center;
   margin-top:6px;padding-bottom:4px;flex-shrink:0}
 .site-foot a{color:var(--muted);font-size:.7rem;letter-spacing:.06em;text-decoration:none;
@@ -261,6 +263,7 @@ body.in-session .topbtns{display:none}
     </div>
     <h1 class="app-title">Awaken<br>Turiya</h1>
     <div class="subtitle">Train Your Psychic Intuition</div>
+    <div class="sound-note">Answers are spoken aloud. Turn your volume up. On iPhone, switch the side ringer on.</div>
   </div>
 
   <div class="session-card" onclick="startSession('bw')">
@@ -492,25 +495,42 @@ function showScreen(id){
 const SPEECH_OK = ('speechSynthesis' in window) &&
                   (typeof window.SpeechSynthesisUtterance === 'function');
 
-function speak(text,cb){
-  if(typeof text!=='string') return;
-  let done=false;
-  const finish=()=>{ if(done) return; done=true; if(typeof cb==='function') cb(); };
-
-  if(!SPEECH_OK){ setTimeout(finish,350); return; }
-
-  try{ window.speechSynthesis.cancel(); }catch(_){}
-  const u=new SpeechSynthesisUtterance(text);
-  u.rate=0.88; u.pitch=1.0; u.volume=1.0;
-  u.onend=finish; u.onerror=finish;
-
-  /* Safety net. Browsers drop 'end' more often than phones do: Safari with a
-     muted tab, a machine with no installed voices, a backgrounded tab. Without
-     this the session would sit forever with S.speaking true and never advance. */
-  setTimeout(finish, Math.min(9000, 1400 + text.length*90));
-
-  try{ window.speechSynthesis.speak(u); }catch(_){ finish(); }
+let chosenVoice=null;
+function pickVoice(){
+  if(!SPEECH_OK) return;
+  let vs=[];
+  try{ vs=window.speechSynthesis.getVoices()||[]; }catch(_){ vs=[]; }
+  if(!vs.length) return;
+  chosenVoice =
+    vs.find(v=>/en[-_]US/i.test(v.lang) && /samantha|karen|google us|female|zira/i.test(v.name)) ||
+    vs.find(v=>/^en[-_]/i.test(v.lang)) ||
+    vs[0];
 }
+if(SPEECH_OK){
+  pickVoice();
+  try{ window.speechSynthesis.onvoiceschanged=pickVoice; }catch(_){}
+}
+
+/* Fire-and-forget. Speech never gates gameplay: a tap reveals instantly and
+   speaks the answer, interrupting whatever was mid-sentence. Nothing waits on
+   the 'end' event (mobile drops it constantly), so taps can never be blocked
+   by a stuck utterance. */
+function speak(text){
+  if(!SPEECH_OK || typeof text!=='string' || !text) return;
+  try{
+    const synth=window.speechSynthesis;
+    try{ synth.resume(); }catch(_){}   // iOS can leave the queue paused/stuck
+    synth.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='en-US'; u.rate=0.9; u.pitch=1.0; u.volume=1.0;
+    if(chosenVoice) u.voice=chosenVoice;
+    synth.speak(u);
+  }catch(_){}
+}
+
+/* Haptic tick so a tap is felt even when the phone is on silent (Android;
+   iOS Safari ignores it harmlessly). */
+function buzz(){ try{ if(navigator.vibrate) navigator.vibrate(12); }catch(_){} }
 
 /* ── STARS ────────────────────────────────────────────────────────── */
 function makeStars(id,n){
@@ -531,16 +551,26 @@ makeStars('home-stars',90);
 makeStars('complete-stars',60);
 updateToggleUI(); // reflect saved preference on load
 
-/* Speech warm-up: browsers need a user gesture before the first utterance */
+/* Speech unlock. Mobile browsers only allow the first utterance from inside a
+   real user gesture, so prime a real (phoneme-free, so inaudible) utterance at
+   full volume on the very first touch. A volume-0 primer does NOT reliably
+   unlock iOS Safari, which is why spoken answers were silent before. */
 (function(){
-  let warmed=false;
-  function warm(){
-    if(warmed) return; warmed=true;
+  let unlocked=false;
+  function unlock(){
+    if(unlocked) return; unlocked=true;
     if(!SPEECH_OK) return;
-    try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;window.speechSynthesis.speak(u);}catch(_){}
+    try{
+      const synth=window.speechSynthesis;
+      synth.resume();
+      const u=new SpeechSynthesisUtterance(' ');
+      u.volume=1; u.rate=1; u.lang='en-US';
+      synth.speak(u);
+      pickVoice();
+    }catch(_){}
   }
-  ['touchstart','pointerdown','keydown'].forEach(ev=>
-    document.addEventListener(ev,warm,{once:true,passive:true}));
+  ['pointerdown','touchstart','click','keydown'].forEach(ev=>
+    document.addEventListener(ev,unlock,{once:true,passive:true}));
 })();
 
 /* ── HINT TEXT ────────────────────────────────────────────────────── */
@@ -665,29 +695,29 @@ function flash(mode){
 
 /* ── REVEAL (first tap) ───────────────────────────────────────────── */
 function doReveal(mode){
-  if(S.speaking||S.locked||S.mode!==mode||S.phase!=='reveal') return;
+  if(S.locked||S.mode!==mode||S.phase!=='reveal') return;
   flash(mode);
+  buzz();
   const label=getLabel(mode);
 
   if(scoringOn){
     // Scoring mode: speak answer, wait for left/right tap
     S.phase='score';
-    S.speaking=true;
     updateDisplay(mode);
-    speak(label,()=>{ S.speaking=false; });
+    speak(label);
   } else {
-    // Simple mode: speak answer and immediately advance
+    // Simple mode: speak the answer and immediately advance
     const wasLast=(S.qNum>=20);
     if(wasLast){
       S.locked=true;
-      speak(label,()=>{ S.speaking=false; sessionComplete(mode); });
+      speak(label);
+      setTimeout(()=>sessionComplete(mode), 1150);
       return;
     }
     S.qNum++;
     pickNext(mode);
     updateDisplay(mode);
-    S.speaking=true;
-    speak(label,()=>{ S.speaking=false; });
+    speak(label);
   }
 }
 
@@ -695,6 +725,7 @@ function doReveal(mode){
 function doScore(mode, correct){
   if(S.locked||S.mode!==mode||S.phase!=='score') return;
   flash(mode);
+  buzz();
   if(correct) S.score++;
   const wasLast=(S.qNum>=20);
   if(wasLast){
@@ -709,8 +740,14 @@ function doScore(mode, correct){
 }
 
 /* ── MAIN TAP HANDLER ─────────────────────────────────────────────── */
+let lastTapTs=0;
 function handleTap(mode, clientX, screenW){
   if(S.mode!==mode) return;
+  // Debounce only accidental double-fire from one physical tap (~140ms).
+  // This is NOT the old speech gate: real taps are never blocked.
+  const now=Date.now();
+  if(now-lastTapTs<140) return;
+  lastTapTs=now;
   if(S.phase==='reveal'){
     doReveal(mode);
   } else {
