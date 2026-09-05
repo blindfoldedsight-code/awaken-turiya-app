@@ -24,7 +24,7 @@
 }
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--white);
   font-family:-apple-system,'SF Pro Display','Helvetica Neue',Arial,sans-serif;
-  -webkit-user-select:none;user-select:none}
+  -webkit-user-select:none;user-select:none;touch-action:manipulation}
 
 /* ── SCREENS ── */
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;
@@ -101,7 +101,9 @@ h1.app-title{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:700;letter-spacing:.
 .toggle-track.on .toggle-knob{transform:translateX(19px);}
 
 /* ── TRAINING SCREENS ── */
-.train-screen{transition:background-color .2s ease;cursor:pointer}
+.train-screen{transition:background-color .2s ease;cursor:pointer;
+  touch-action:manipulation;-webkit-user-select:none;user-select:none;
+  -webkit-tap-highlight-color:transparent}
 
 /* Top bar */
 .train-topbar{
@@ -743,10 +745,10 @@ function doScore(mode, correct){
 let lastTapTs=0;
 function handleTap(mode, clientX, screenW){
   if(S.mode!==mode) return;
-  // Debounce only accidental double-fire from one physical tap (~140ms).
-  // This is NOT the old speech gate: real taps are never blocked.
+  // Debounce only a stray duplicate from a single physical tap (~90ms), low
+  // enough that genuine fast tapping is never swallowed.
   const now=Date.now();
-  if(now-lastTapTs<140) return;
+  if(now-lastTapTs<90) return;
   lastTapTs=now;
   if(S.phase==='reveal'){
     doReveal(mode);
@@ -796,6 +798,7 @@ function sessionComplete(mode){
     const screen=document.getElementById(mode+'-train');
     const backBtn=document.getElementById(mode+'-back');
 
+    backBtn.addEventListener('pointerup',e=>e.stopPropagation());
     backBtn.addEventListener('pointerdown',e=>e.stopPropagation());
     backBtn.addEventListener('click',e=>{
       e.stopPropagation();
@@ -804,11 +807,17 @@ function sessionComplete(mode){
       showScreen('home');
     });
 
-    screen.addEventListener('pointerdown',e=>{
+    /* Tap-to-reveal fires on pointerUP, not pointerdown. On iOS Safari a
+       pointerdown handler that calls preventDefault (needed there to stop the
+       synthetic click) intermittently swallows rapid successive taps and can
+       raise pointercancel, which is the "have to tap 5 times" bug on iPhone
+       and iPad. pointerup fires reliably once per tap on every platform, needs
+       no preventDefault (touch-action:manipulation already kills the zoom
+       gesture and the 300ms delay), and still carries clientX for scoring. */
+    screen.addEventListener('pointerup',e=>{
       if(e.target===backBtn||backBtn.contains(e.target)) return;
-      e.preventDefault();
       handleTap(mode, e.clientX, screen.offsetWidth);
-    },{passive:false});
+    });
   }
 
   /* Keyboard: Space = reveal, ← = wrong, → = correct */

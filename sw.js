@@ -1,5 +1,5 @@
 /* Awaken Turiya — offline cache. Bump CACHE when index.html changes. */
-const CACHE = 'awaken-turiya-v2';
+const CACHE = 'awaken-turiya-v3';
 const ASSETS = [
   './',
   './index.html',
